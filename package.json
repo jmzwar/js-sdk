@@ -1,19 +1,25 @@
 {
-  "name": "queries",
+  "name": "js-sdk",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "nodejs sdk for synthetix",
+  "main": "setup.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Dev sam",
   "license": "ISC",
+  "devDependencies": {
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0"
+  },
   "dependencies": {
+    "decimal.js": "^10.4.3",
     "axios": "^1.6.2",
     "bignumber.js": "^9.1.2",
     "graphql-request": "^6.1.0",
     "requests": "^0.3.0",
-    "web3": "^4.2.2"
-  },
-  "description": ""
+    "web3": "^4.2.2",
+    "base": "*"
+  }
 }

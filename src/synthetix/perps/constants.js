@@ -12,6 +12,7 @@ const COLLATERALS_BY_ID = {
     }
 };
 
+
 const COLLATERALS_BY_NAME = {};
 for (const network in COLLATERALS_BY_ID) {
     COLLATERALS_BY_NAME[network] = {};

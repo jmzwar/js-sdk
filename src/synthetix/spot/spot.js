@@ -258,7 +258,7 @@ class Spot {
 
 
 
-// Usage
+// Usage for test
 // const spot = new Spot(snxInstance, pythInstance);
 // spot.getBalance('0xYourAddress', /* marketId or marketName parameters */)
 //     .then(balance => console.log(balance))

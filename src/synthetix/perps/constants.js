@@ -43,5 +43,5 @@ for (const network in PERPS_MARKETS_BY_ID) {
     }
 }
 
-console.log('COLLATERALS_BY_NAME:', COLLATERALS_BY_NAME);
-console.log('PERPS_MARKETS_BY_NAME:', PERPS_MARKETS_BY_NAME);
+// console.log('COLLATERALS_BY_NAME:', COLLATERALS_BY_NAME);
+// console.log('PERPS_MARKETS_BY_NAME:', PERPS_MARKETS_BY_NAME);

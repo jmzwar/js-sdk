@@ -11,15 +11,16 @@
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.3.10",
+    "dotenv": "^16.3.1",
     "mocha": "^10.2.0"
   },
   "dependencies": {
-    "decimal.js": "^10.4.3",
     "axios": "^1.6.2",
+    "base": "*",
     "bignumber.js": "^9.1.2",
+    "decimal.js": "^10.4.3",
     "graphql-request": "^6.1.0",
     "requests": "^0.3.0",
-    "web3": "^4.2.2",
-    "base": "*"
+    "web3": "^4.2.2"
   }
 }

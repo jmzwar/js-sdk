@@ -62,7 +62,7 @@ async function testSpotApproval() {
 
 
 // Run the tests
-// testSpotModule();
-// testSpotBalances();
-// testSpotAllowances();
-// testSpotApproval();
+testSpotModule();
+testSpotBalances();
+testSpotAllowances();
+testSpotApproval();

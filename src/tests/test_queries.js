@@ -304,10 +304,10 @@ const testQueriesFundingRatesInputs = async (snx, logger) => {
 
 
 // Run the tests
-// testQueriesCandlesMarket();
-// testQueriesCandlesPeriod();
-// testQueriesTradesAllMarkets();
-// testQueriesTradesMarket();
-// testQueriesTradesMarketInputs();
-// testQueriesTradesAccountInternal();
-// testQueriesTradesAccountSpecified();
+testQueriesCandlesMarket();
+testQueriesCandlesPeriod();
+testQueriesTradesAllMarkets();
+testQueriesTradesMarket();
+testQueriesTradesMarketInputs();
+testQueriesTradesAccountInternal();
+testQueriesTradesAccountSpecified();

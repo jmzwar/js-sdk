@@ -48,7 +48,7 @@ async function testSusdLegacyBalance() {
 }
 
 // Run the tests
-// testSusdContract();
-// testSusdLegacyContract();
-// testSusdBalance();
-// testSusdLegacyBalance();
+testSusdContract();
+testSusdLegacyContract();
+testSusdBalance();
+testSusdLegacyBalance();

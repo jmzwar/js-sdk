@@ -8,19 +8,21 @@ dotenv.config();
 // Replace these with your actual environment variables
 const RPC = process.env.BASE_TESTNET_RPC;
 const ADDRESS = process.env.ADDRESS;
-const NETWORK = process.env.NETWORK || 'mainnet'; 
-const snxjs = synthetix({
-  provider: RPC,
-  networkId: 84531,
+
+describe('Synthetix Configuration Test', () => {
+  it('Connects to Synthetix and gets sUSD balance', async () => {
+    try {
+      const snxjs = synthetix({
+        provider: RPC,
+        networkId: 84531,
+      });
+
+      const balance = await snxjs.sUSD.balanceOf(ADDRESS);
+      console.log('sUSD Balance:', balance.toString());
+      assert.ok(balance.gte(0), 'Expected a valid sUSD balance');
+    } catch (error) {
+      console.error('Error fetching sUSD balance:', error);
+      assert.fail('Failed to fetch sUSD balance');
+    }
+  });
 });
-
-const logger = () => {
-  const logg = logging.getLogger(__filename);
-  if (!logg.hasHandlers()) {
-    const handler = new logging.StreamHandler();
-    handler.setFormatter(new logging.Formatter('%(name)s - %(levelname)s - %(message)s'));
-    logg.addHandler(handler);
-  }
-  return logg;
-};
-

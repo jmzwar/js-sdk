@@ -15,10 +15,7 @@
     "mocha": "^10.2.0"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@anvilco/anvil": "^3.1.0",
-=======
->>>>>>> 3bfcb0d2871693cfea552f268ebda5d4a4c134c1
     "axios": "^1.6.2",
     "base": "*",
     "bignumber.js": "^9.1.2",

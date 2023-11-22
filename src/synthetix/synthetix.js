@@ -1,6 +1,20 @@
-const Web3 = require('web3');
-const { loadContracts } = require('./yourContractLoaderModule'); // Replace with the actual path to your contract loader module
+const web3 = require('web3')
 
+const loadContracts = require('./contracts').loadContracts;
+const Pyth = require('./pyth');
+const Core = require('./core');
+const Perps = require('./perps');
+const Spot = require('./spot');
+// const Alerts = require('./alerts');
+const Queries = require('./queries');
+
+const DEFAULT_NETWORK_ID = constants.DEFAULT_NETWORK_ID;
+const DEFAULT_TRACKING_CODE = constants.DEFAULT_TRACKING_CODE;
+const DEFAULT_SLIPPAGE = constants.DEFAULT_SLIPPAGE;
+const DEFAULT_GQL_ENDPOINT_PERPS = constants.DEFAULT_GQL_ENDPOINT_PERPS;
+const DEFAULT_GQL_ENDPOINT_RATES = constants.DEFAULT_GQL_ENDPOINT_RATES;
+const DEFAULT_PRICE_SERVICE_ENDPOINTS = constants.DEFAULT_PRICE_SERVICE_ENDPOINTS;
+const DEFAULT_REFERRER = constants.DEFAULT_REFERRER;
 class Synthetix {
     // The main class for interacting with the Synthetix protocol. The class
     // requires a provider RPC endpoint and a wallet address::

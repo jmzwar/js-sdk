@@ -15,13 +15,18 @@
     "mocha": "^10.2.0"
   },
   "dependencies": {
-    "@anvilco/anvil": "^3.1.0",
+    "@synthetixio/js": "^2.41.0",
+    "assert": "^2.1.0",
     "axios": "^1.6.2",
     "base": "*",
     "bignumber.js": "^9.1.2",
     "decimal.js": "^10.4.3",
+    "ethers": "^6.8.1",
     "graphql-request": "^6.1.0",
+    "logging": "^3.3.0",
     "requests": "^0.3.0",
+    "synthetix": "^2.96.1",
+    "synthetix-js": "^2.74.1",
     "web3": "^4.2.2"
   }
 }

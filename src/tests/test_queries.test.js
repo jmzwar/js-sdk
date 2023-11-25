@@ -1,4 +1,5 @@
-const { SynthetixJs } = require('synthetix-js');
+import Synthetix from '../synthetix/synthetix.js';
+
 const os = require('os');
 
 // Load environment variables if necessary
@@ -6,7 +7,7 @@ const os = require('os');
 // process.env.ETH_NODE_URL = 'your_ethereum_node_url';
 
 // Instantiate Synthetix
-const snx = new SynthetixJs();
+const snx = new Synthetix();
 
 // Constants
 const TEST_ASSET = 'SOL';

@@ -1,18 +1,14 @@
-const Decimal = require('decimal.js');
+// utils.js
+import { Decimal } from 'decimal.js';
 
-function weiToEther(weiValue) {
-    const wei = new Decimal(weiValue);
-    const ether = wei.dividedBy(new Decimal(1e18));
-    return ether.toNumber();
+export function weiToEther(weiValue) {
+  const weiDecimal = new Decimal(weiValue);
+  const etherDecimal = weiDecimal.dividedBy(new Decimal(1e18));
+  return etherDecimal.toNumber();
 }
 
-function etherToWei(etherValue) {
-    const ether = new Decimal(etherValue);
-    const wei = ether.times(new Decimal(1e18));
-    return wei.toNumber();
+export function etherToWei(etherValue) {
+  const etherDecimal = new Decimal(etherValue);
+  const weiDecimal = etherDecimal.times(new Decimal(1e18));
+  return weiDecimal.toNumber();
 }
-
-module.exports = {
-    weiToEther,
-    etherToWei,
-};

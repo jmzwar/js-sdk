@@ -1,6 +1,6 @@
-const { etherToWei, weiToEther } = require('../utils');
-const SPOT_MARKETS_BY_ID = require('./constants').SPOT_MARKETS_BY_ID;
-const SPOT_MARKETS_BY_NAME = require('./constants').SPOT_MARKETS_BY_NAME;
+import { ethers } from 'ethers';
+import { etherToWei, weiToEther } from '../utils/wei.js';
+import { SPOT_MARKETS_BY_ID, SPOT_MARKETS_BY_NAME } from './constants.js';
 
 class Spot {
     constructor(snx, pyth) {
@@ -11,12 +11,12 @@ class Spot {
         // Check if spot is deployed on this network
         if ('SpotMarketProxy' in snx.contracts) {
             const { address, abi } = snx.contracts['SpotMarketProxy'];
-            this.market_proxy = new snx.web3.eth.Contract(abi, address);
+            this.marketProxy = new ethers.Contract(address, abi, snx.signer);
         }
     }
 
     // Internals
-    _resolveMarket(marketId, marketName) {
+    async _resolveMarket(marketId, marketName) {
         if (marketId === undefined && marketName === undefined) {
             throw new Error('Must provide a marketId or marketName');
         }
@@ -42,59 +42,56 @@ class Spot {
         return { marketId, marketName };
     }
 
-    _getSynthContract(marketId, marketName) {
-        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = this._resolveMarket(marketId, marketName);
+    async _getSynthContract(marketId, marketName) {
+        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = await this._resolveMarket(marketId, marketName);
 
         let marketImplementation;
         if (resolvedMarketId === 0) {
             marketImplementation = this.snx.contracts['USDProxy']['address'];
         } else {
-            marketImplementation = this.market_proxy.methods.getSynth(resolvedMarketId).call();
+            marketImplementation = await this.marketProxy.getSynth(resolvedMarketId);
         }
 
-        return new this.snx.web3.eth.Contract(
-            this.snx.contracts['USDProxy']['abi'],
-            marketImplementation
-        );
+        return new ethers.Contract(marketImplementation, this.snx.contracts['USDProxy']['abi'], this.snx.signer);
     }
 
     // Read
-    getBalance(address, marketId, marketName) {
-        const { marketId: resolvedMarketId } = this._resolveMarket(marketId, marketName);
+    async getBalance(address, marketId, marketName) {
+        const { marketId: resolvedMarketId } = await this._resolveMarket(marketId, marketName);
 
         if (address === undefined) {
-            address = this.snx.address;
+            address = await this.snx.getAddress();
         }
 
-        const synthContract = this._getSynthContract(resolvedMarketId);
-        return synthContract.methods.balanceOf(address).call()
-            .then(balance => weiToEther(balance));
+        const synthContract = await this._getSynthContract(resolvedMarketId);
+        const balance = await synthContract.balanceOf(address);
+        return weiToEther(balance);
     }
 
-    getAllowance(targetAddress, address, marketId, marketName) {
-        const { marketId: resolvedMarketId } = this._resolveMarket(marketId, marketName);
+    async getAllowance(targetAddress, address, marketId, marketName) {
+        const { marketId: resolvedMarketId } = await this._resolveMarket(marketId, marketName);
 
         if (address === undefined) {
-            address = this.snx.address;
+            address = await this.snx.getAddress();
         }
 
-        const synthContract = this._getSynthContract(resolvedMarketId);
-        return synthContract.methods.allowance(address, targetAddress).call()
-            .then(allowance => weiToEther(allowance));
+        const synthContract = await this._getSynthContract(resolvedMarketId);
+        const allowance = await synthContract.allowance(address, targetAddress);
+        return weiToEther(allowance);
     }
 
-    getSettlementStrategy(settlementStrategyId, marketId, marketName) {
-        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = this._resolveMarket(marketId, marketName);
+    async getSettlementStrategy(settlementStrategyId, marketId, marketName) {
+        const { marketId: resolvedMarketId } = await this._resolveMarket(marketId, marketName);
 
-        const settlementStrategy = this.market_proxy.methods.getSettlementStrategy(resolvedMarketId, settlementStrategyId).call();
+        const settlementStrategy = await this.marketProxy.getSettlementStrategy(resolvedMarketId, settlementStrategyId);
         return settlementStrategy;
     }
 
-    getOrder(asyncOrderId, marketId, marketName, fetchSettlementStrategy) {
-        const { marketId: resolvedMarketId } = this._resolveMarket(marketId, marketName);
+    async getOrder(asyncOrderId, marketId, marketName, fetchSettlementStrategy) {
+        const { marketId: resolvedMarketId } = await this._resolveMarket(marketId, marketName);
 
-        const marketContract = this.market_proxy;
-        const order = marketContract.methods.getAsyncOrderClaim(resolvedMarketId, asyncOrderId).call();
+        const marketContract = this.marketProxy;
+        const order = await marketContract.getAsyncOrderClaim(resolvedMarketId, asyncOrderId);
         const [id, owner, orderType, amountEscrowed, settlementStrategyId, settlementTime, minimumSettlementAmount, settledAt, referrer] = order;
 
         const orderData = {
@@ -110,7 +107,7 @@ class Spot {
         };
 
         if (fetchSettlementStrategy) {
-            const settlementStrategy = this.getSettlementStrategy(settlementStrategyId, resolvedMarketId);
+            const settlementStrategy = await this.getSettlementStrategy(settlementStrategyId, resolvedMarketId);
             orderData.settlementStrategy = settlementStrategy;
         }
 
@@ -118,29 +115,33 @@ class Spot {
     }
 
     // Transactions
-    approve(targetAddress, amount, marketId, marketName, submit) {
-        const { marketId: resolvedMarketId } = this._resolveMarket(marketId, marketName);
+    async approve(targetAddress, amount, marketId, marketName, submit) {
+        const { marketId: resolvedMarketId } = await this._resolveMarket(marketId, marketName);
 
-        amount = amount === undefined ? Math.pow(2, 256) - 1 : etherToWei(amount);
-        const synthContract = this._getSynthContract(resolvedMarketId);
+        amount = amount === undefined ? ethers.constants.MaxUint256.toString() : etherToWei(amount);
+        const synthContract = await this._getSynthContract(resolvedMarketId);
 
-        const txData = synthContract.methods.approve(targetAddress, amount).encodeABI();
+        const txData = synthContract.interface.encodeFunctionData('approve', [targetAddress, amount]);
 
-        const txParams = this.snx._getTxParams();
-        synthContract.methods.approve(targetAddress, amount).buildTransaction(txParams);
+        const txParams = await this.snx._getTxParams();
+        const txRequest = {
+            to: synthContract.address,
+            data: txData,
+            ...txParams,
+        };
 
         if (submit) {
-            const txHash = this.snx.executeTransaction(txParams);
-            this.logger.info(`Approving ${targetAddress} to spend ${amount / 1e18} ${marketName}`);
+            const txHash = await this.snx.executeTransaction(txRequest);
+            this.logger.info(`Approving ${targetAddress} to spend ${weiToEther(amount)} ${marketName}`);
             this.logger.info(`approve tx: ${txHash}`);
             return txHash;
         } else {
-            return txParams;
+            return txRequest;
         }
     }
 
-    commitOrder(side, size, settlementStrategyId = 2, marketId, marketName, submit) {
-        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = this._resolveMarket(marketId, marketName);
+    async commitOrder(side, size, settlementStrategyId = 2, marketId, marketName, submit) {
+        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = await this._resolveMarket(marketId, marketName);
 
         // TODO: Add a slippage parameter
         // TODO: Allow the user to specify USD or ETH values (?)
@@ -158,11 +159,11 @@ class Spot {
             this.snx.referrer,        // referrer
         ];
 
-        const txParams = writeErc7412(this.snx, this.market_proxy, 'commitOrder', txArgs);
+        const txParams = await writeErc7412(this.snx, this.marketProxy, 'commitOrder', txArgs);
 
         if (submit) {
-            const txHash = this.snx.executeTransaction(txParams);
-            this.logger.info(`Committing ${side} order of size ${sizeWei} (${size}) to ${resolvedMarketName} (id: ${resolvedMarketId})`);
+            const txHash = await this.snx.executeTransaction(txParams);
+            this.logger.info(`Committing ${side} order of size ${weiToEther(sizeWei)} (${size}) to ${resolvedMarketName} (id: ${resolvedMarketId})`);
             this.logger.info(`commitOrder tx: ${txHash}`);
             return txHash;
         } else {
@@ -171,9 +172,9 @@ class Spot {
     }
 
     async settlePythOrder(asyncOrderId, marketId, marketName, maxRetry = 10, retryDelay = 2, submit) {
-        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = this._resolveMarket(marketId, marketName);
+        const { marketId: resolvedMarketId, marketName: resolvedMarketName } = await this._resolveMarket(marketId, marketName);
 
-        const order = this.getOrder(asyncOrderId, resolvedMarketId);
+        const order = await this.getOrder(asyncOrderId, resolvedMarketId);
         const settlementStrategy = order.settlement_strategy;
 
         // Check if the order is ready to be settled
@@ -190,7 +191,7 @@ class Spot {
 
         // Create hex inputs
         const feedIdHex = settlementStrategy.feed_id;
-        const settlementTimeHex = this.snx.web3.utils.toHex(BigInt(order.settlement_time));
+        const settlementTimeHex = ethers.utils.hexValue(order.settlement_time);
 
         // Concatenate the hex strings with '0x' prefix
         const dataParam = `0x${feedIdHex}${settlementTimeHex.slice(2)}`;
@@ -224,18 +225,18 @@ class Spot {
         orderIdBytes.writeUIntBE(order.id, 0, 32);
 
         // Concatenate the bytes and convert to hex
-        const extraData = this.snx.web3.utils.toHex(Buffer.concat([marketBytes, orderIdBytes]));
+        const extraData = ethers.utils.hexValue(Buffer.concat([marketBytes, orderIdBytes]));
 
         // Log the data
         this.logger.info(`priceUpdateData: ${priceUpdateData}`);
         this.logger.info(`extraData: ${extraData}`);
 
         // Prepare the transaction
-        const txParams = writeErc7412(this.snx, this.market_proxy, 'settlePythOrder', [priceUpdateData, extraData], { value: 1 });
+        const txParams = await writeErc7412(this.snx, this.marketProxy, 'settlePythOrder', [priceUpdateData, extraData], { value: 1 });
 
         if (submit) {
             this.logger.info(`tx params: ${JSON.stringify(txParams)}`);
-            const txHash = this.snx.executeTransaction(txParams);
+            const txHash = await this.snx.executeTransaction(txParams);
             this.logger.info(`Settling order ${order.id}`);
             this.logger.info(`settle tx: ${txHash}`);
             return txHash;
@@ -243,11 +244,9 @@ class Spot {
             return txParams;
         }
     }
-    
-
-    
 }
 
+export default Spot;
 
 
 

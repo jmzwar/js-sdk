@@ -1,196 +1,200 @@
-const axios = require('axios');
-const { ContractCustomError } = require('web3');
-const { getAbiOutputTypes } = require('web3-utils');
-const { decode, encode } = require('ethereumjs-abi');
-const { toBuffer, toHex } = require('ethereumjs-util');
+import axios from 'axios';
+import { Web3 } from 'web3';
+import  ContractCustomError  from 'web3-core-helpers';
+import { utils } from 'ethers';
+import abi from 'ethereumjs-abi';
+import hexConverter from 'hex-encode-decode';
 
+// constants
 const ORACLE_DATA_REQUIRED = '0xcf2cabdf';
 
-function decodeResult(contract, function_name, result) {
-    const funcAbi = contract.getFunctionByName(function_name).abi;
-    const outputTypes = getAbiOutputTypes(funcAbi);
+export function decodeResult(contract, functionName, result) {
+  // get the function ABI
+  const funcAbi = contract.interface.getFunction(functionName);
+  const outputTypes = funcAbi.outputs.map(arg => arg.type);
 
-    return decode(outputTypes, toBuffer(result));
+  // decode the result
+  const decodedResult = utils.defaultAbiCoder.decode(outputTypes, result);
+
+  return decodedResult;
 }
 
-function decodeErc7412Error(snx, error) {
-    const errorData = decode_hex(`0x${error.slice(10)}`);
+// ERC-7412 support
+export function decodeErc7412Error(snx, error) {
+  // remove the signature and decode the error data
+  const errorData = hexConverter.decode(`0x${error.slice(10)}`);
 
-    const outputTypes = ['address', 'bytes'];
-    const [address, data] = decode(outputTypes, errorData);
-    const checksumAddress = snx.web3.utils.toChecksumAddress(address);
+  // decode the result
+  const outputTypes = ['address', 'bytes'];
+  const [address, data] = abi.rawDecode(outputTypes, errorData);
+  const checksumAddress = snx.web3.utils.toChecksumAddress(address);
 
-    const outputTypesOracle = ['uint8', 'uint64', 'bytes32[]'];
-    const [tag, stalenessTolerance, rawFeedIds] = decode(outputTypesOracle, data);
-    const feedIds = rawFeedIds.map((rawFeedId) => toHex(rawFeedId));
-    return checksumAddress, feedIds, [tag, stalenessTolerance, rawFeedIds];
+  // decode the bytes data into the arguments for the oracle
+  const outputTypesOracle = ['uint8', 'uint64', 'bytes32[]'];
+  const [tag, stalenessTolerance, rawFeedIds] = abi.rawDecode(outputTypesOracle, data);
+  const feedIds = rawFeedIds.map((rawFeedId) => hexConverter.encode(rawFeedId));
+  return { address: checksumAddress, feedIds, args: { tag, stalenessTolerance, rawFeedIds } };
 }
 
-async function makeFulfillmentRequest(snx, address, priceUpdateData, args) {
-    const ercContract = new snx.web3.eth.Contract(snx.contracts['ERC7412'].abi, address);
+export function makeFulfillmentRequest(snx, address, priceUpdateData, args) {
+  const ercContract = new snx.web3.eth.Contract(
+    snx.contracts['ERC7412'].abi,
+    address
+  );
 
-    const encodedArgs = encode(['uint8', 'uint64', 'bytes32[]', 'bytes[]'], [
-        ...args,
-        priceUpdateData,
-    ]);
+  const encodedArgs = abi.rawEncode(['uint8', 'uint64', 'bytes32[]', 'bytes[]'], [
+    ...args,
+    priceUpdateData,
+  ]);
 
-    const value = priceUpdateData.length * 1;
+  // assume 1 wei per price update
+  const value = priceUpdateData.length * 1;
 
-    const updateTx = ercContract.methods.fulfillOracleQuery(encodedArgs).encodeABI();
-    const gas = await ercContract.methods.fulfillOracleQuery(encodedArgs).estimateGas();
-
-    return { to: address, data: updateTx, value, gas };
+  const updateTx = ercContract.methods.fulfillOracleQuery(encodedArgs);
+  return {
+    to: updateTx._parent._address,
+    data: updateTx.encodeABI(),
+    value,
+  };
 }
 
-async function writeErc7412(snx, contract, functionName, args, txParams = {}, calls = []) {
-    const thisCall = [
-        {
-            to: contract.options.address,
-            value: 'value' in txParams ? txParams.value : 0,
-            data: toBuffer(contract.methods[functionName](...args).encodeABI()).toString('hex'),
-        },
-    ];
+export async function writeErc7412(snx, contract, functionName, args, txParams = {}, calls = []) {
+  // prepare the initial call
+  const thisCall = [
+    {
+      to: contract._address,
+      value: 'value' in txParams ? txParams.value : 0,
+      data: '0x' + contract.methods[functionName](...args).encodeABI().slice(2),
+    },
+  ];
+  calls = calls.concat(thisCall);
 
-    calls = [...calls, ...thisCall];
+  while (true) {
+    try {
+      // unpack calls into the multicallThrough inputs
+      const totalValue = calls.reduce((acc, call) => acc + call.value, 0);
 
-    while (true) {
-        try {
-            const totalValue = calls.reduce((acc, call) => acc + call.value, 0);
+      // create the transaction and do a static call
+      const txParams = snx._getTxParams({ value: totalValue });
+      const aggregatedTx = snx.multicall.methods.aggregate3Value(calls);
+      const txData = aggregatedTx.encodeABI();
 
-            const gas = await snx.multicall.methods.aggregate3Value(calls).estimateGas();
-            const gasBuffered = Math.ceil(gas * 1.15);
+      // buffer the gas limit
+      const gasLimit = Math.ceil(txParams.gas * 1.15);
+      const gasParams = { ...txParams, gas: gasLimit };
 
-            snx.logger.info(`Simulated tx successfully: { gas: ${gasBuffered} }`);
-            return { gas: gasBuffered };
-        } catch (e) {
-            if (e instanceof ContractCustomError && e.data.startsWith(ORACLE_DATA_REQUIRED)) {
-                const [address, feedIds, args] = decodeErc7412Error(snx, e.data);
+      // if simulation passes, return the transaction
+      console.log(`Simulated tx successfully: ${JSON.stringify(gasParams)}`);
+      return gasParams;
+    } catch (error) {
+      // check if the error is related to oracle data
+      if (error instanceof ContractCustomError && error.data.startsWith(ORACLE_DATA_REQUIRED)) {
+        // decode error data
+        const { address, feedIds, args } = decodeErc7412Error(snx, error.data);
 
-                const priceUpdateData = await snx.pyth.getFeedsData(feedIds);
+        // fetch the data from pyth for those feed ids
+        const priceUpdateData = await snx.pyth.getFeedsData(feedIds);
 
-                const { to, data, value, gas } = await makeFulfillmentRequest(
-                    snx,
-                    address,
-                    priceUpdateData,
-                    args
-                );
-
-                calls = [...calls.slice(0, -1), { to, value, data }, ...calls.slice(-1)];
-
-            } else {
-                snx.logger.error(`Error is not related to oracle data: ${e}`);
-                throw e;
-            }
-        }
+        // create a new request
+        const { to, data, value } = makeFulfillmentRequest(snx, address, priceUpdateData, args);
+        calls = calls.slice(0, -1).concat([{ to, value, data }]).concat(calls.slice(-1));
+      } else {
+        console.error(`Error is not related to oracle data: ${error}`);
+        throw error;
+      }
     }
+  }
 }
 
-async function callErc7412(snx, contract, functionName, args, calls = [], block = 'latest') {
-    args = Array.isArray(args) ? args : [args];
+export async function callErc7412(snx, contract, functionName, args, calls = [], block = 'latest') {
+  // fix args
+  args = Array.isArray(args) ? args : [args];
 
-    const thisCall = {
-        to: contract.options.address,
-        value: 0,
-        data: toBuffer(contract.methods[functionName](...args).encodeABI()).toString('hex'),
-    };
+  // prepare the initial calls
+  const thisCall = {
+    to: contract._address,
+    value: 0,
+    data: contract.methods[functionName](...args).encodeABI(),
+  };
+  calls = calls.concat([thisCall]);
 
-    calls = [...calls, thisCall];
+  while (true) {
+    try {
+      const totalValue = calls.reduce((acc, call) => acc + call.value, 0);
 
-    while (true) {
-        try {
-            const totalValue = calls.reduce((acc, call) => acc + call.value, 0);
+      // call it
+      const txParams = snx._getTxParams({ value: totalValue });
+      const aggregatedTx = snx.multicall.methods.aggregate3Value(calls);
+      const callResult = await aggregatedTx.call(txParams, block);
 
-            const gas = await snx.multicall.methods.aggregate3Value(calls).estimateGas();
-            const gasBuffered = Math.ceil(gas * 1.15);
+      // call was successful, decode the result
+      const decodedResult = decodeResult(contract, functionName, callResult[callResult.length - 1].input);
+      return decodedResult.length > 1 ? decodedResult : decodedResult[0];
+    } catch (error) {
+      if (error instanceof ContractCustomError && error.data.startsWith(ORACLE_DATA_REQUIRED)) {
+        // decode error data
+        const { address, feedIds, args } = decodeErc7412Error(snx, error.data);
 
-            const callResult = await snx.multicall.methods
-                .aggregate3Value(calls)
-                .call({ value: totalValue, gas: gasBuffered }, block);
+        // fetch the data from pyth for those feed ids
+        const priceUpdateData = await snx.pyth.getFeedsData(feedIds);
 
-            const decodedResult = decodeResult(contract, functionName, callResult[callResult.length - 1][1]);
-            return Array.isArray(decodedResult) && decodedResult.length > 1 ? decodedResult : decodedResult[0];
-        } catch (e) {
-            if (e instanceof ContractCustomError && e.data.startsWith(ORACLE_DATA_REQUIRED)) {
-                const [address, feedIds, args] = decodeErc7412Error(snx, e.data);
-
-                const priceUpdateData = await snx.pyth.getFeedsData(feedIds);
-
-                const { to, data, value, gas } = await makeFulfillmentRequest(
-                    snx,
-                    address,
-                    priceUpdateData,
-                    args
-                );
-
-                calls = [...calls.slice(0, -1), { to, value, data }, ...calls.slice(-1)];
-
-            } else {
-                snx.logger.error(`Error is not related to oracle data: ${e}`);
-                throw e;
-            }
-        }
+        // create a new request
+        const { to, data, value } = makeFulfillmentRequest(snx, address, priceUpdateData, args);
+        calls = calls.slice(0, -1).concat([{ to, value, data }]).concat(calls.slice(-1));
+      } else {
+        console.error(`Error is not related to oracle data: ${error}`);
+        throw error;
+      }
     }
+  }
 }
 
-async function multicallErc7412(snx, contract, functionName, argsList, calls = [], block = 'latest') {
+export async function multicallErc7412(snx, contract, functionName, argsList, calls = [], block = 'latest') {
+  // check if args is a list of lists or tuples
+  // correct the format if it is not
+  const argsListFixed = argsList.map((args) => (Array.isArray(args) ? args : [args]));
+  const numPrependedCalls = calls.length;
 
-    argsList = Array.isArray(argsList[0]) ? argsList : [argsList];
-    const numPrependedCalls = calls.length;
+  // prepare the initial calls
+  const theseCalls = argsListFixed.map((args) => ({
+    to: contract._address,
+    value: 0,
+    data: contract.methods[functionName](...args).encodeABI(),
+  }));
+  calls = calls.concat(theseCalls);
+  const numCalls = calls.length - numPrependedCalls;
 
-    const theseCalls = argsList.map((args) => ({
-        to: contract.options.address,
-        value: 0,
-        data: toBuffer(contract.methods[functionName](...args).encodeABI()).toString('hex'),
-    }));
+  while (true) {
+    try {
+      const totalValue = calls.reduce((acc, call) => acc + call.value, 0);
 
-    calls = [...calls, ...theseCalls];
-    const numCalls = calls.length - numPrependedCalls;
+      // call it
+      const aggregatedTx = snx.multicall.methods.aggregate3Value(calls);
+      const callResult = await aggregatedTx.call({ value: totalValue }, block);
 
-    while (true) {
-        try {
-            const totalValue = calls.reduce((acc, call) => acc + call.value, 0);
+      // call was successful, decode the result
+      const callsToDecode = callResult.slice(-numCalls);
+      const decodedResults = callsToDecode.map((result) => decodeResult(contract, functionName, result.input));
+      const flatDecodedResults = decodedResults.map((decodedResult) =>
+        Array.isArray(decodedResult) ? decodedResult : [decodedResult]
+      );
+      return flatDecodedResults;
+    } catch (error) {
+      if (error instanceof ContractCustomError && error.data.startsWith(ORACLE_DATA_REQUIRED)) {
+        // decode error data
+        const { address, feedIds, args } = decodeErc7412Error(snx, error.data);
 
-            const callResult = await snx.multicall.methods
-                .aggregate3Value(calls)
-                .call({ value: totalValue }, block);
+        // fetch the data from pyth for those feed ids
+        const priceUpdateData = await snx.pyth.getFeedsData(feedIds);
 
-            const callsToDecode = callResult.slice(-numCalls);
-
-            const decodedResults = callsToDecode.map((result) =>
-                decodeResult(contract, functionName, result[1])
-            );
-
-            return decodedResults.map(
-                (decodedResult) => (Array.isArray(decodedResult) && decodedResult.length > 1 ? decodedResult : decodedResult[0])
-            );
-        } catch (e) {
-            if (e instanceof ContractCustomError && e.data.startsWith(ORACLE_DATA_REQUIRED)) {
-                const [address, feedIds, args] = decodeErc7412Error(snx, e.data);
-
-                const priceUpdateData = await snx.pyth.getFeedsData(feedIds);
-
-                const { to, data, value, gas } = await makeFulfillmentRequest(
-                    snx,
-                    address,
-                    priceUpdateData,
-                    args
-                );
-
-                calls = [{ to, value, data }, ...calls];
-
-            } else {
-                snx.logger.error(`Error is not related to oracle data: ${e}`);
-                throw e;
-            }
-        }
+        // create a new request
+        const { to, data, value } = makeFulfillmentRequest(snx, address, priceUpdateData, args);
+        calls = [{ to, value, data }].concat(calls);
+      } else {
+        console.error(`Error is not related to oracle data: ${error}`);
+        throw error;
+      }
     }
+  }
 }
 
-module.exports = {
-    decodeResult,
-    decodeErc7412Error,
-    makeFulfillmentRequest,
-    writeErc7412,
-    callErc7412,
-    multicallErc7412,
-};

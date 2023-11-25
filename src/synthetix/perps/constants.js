@@ -1,4 +1,4 @@
-const COLLATERALS_BY_ID = {
+export const COLLATERALS_BY_ID = {
     420: {
         0: 'sUSD',
         1: 'BTC',
@@ -12,16 +12,13 @@ const COLLATERALS_BY_ID = {
     }
 };
 
+export const COLLATERALS_BY_NAME = Object.fromEntries(
+    Object.entries(COLLATERALS_BY_ID).map(([network, values]) => ({
+        [network]: Object.fromEntries(Object.entries(values).map(([k, v]) => [v, k]))
+    }))
+);
 
-const COLLATERALS_BY_NAME = {};
-for (const network in COLLATERALS_BY_ID) {
-    COLLATERALS_BY_NAME[network] = {};
-    for (const [k, v] of Object.entries(COLLATERALS_BY_ID[network])) {
-        COLLATERALS_BY_NAME[network][v] = parseInt(k);
-    }
-}
-
-const PERPS_MARKETS_BY_ID = {
+export const PERPS_MARKETS_BY_ID = {
     420: {
         100: 'ETH',
         200: 'BTC'
@@ -35,13 +32,8 @@ const PERPS_MARKETS_BY_ID = {
     }
 };
 
-const PERPS_MARKETS_BY_NAME = {};
-for (const network in PERPS_MARKETS_BY_ID) {
-    PERPS_MARKETS_BY_NAME[network] = {};
-    for (const [k, v] of Object.entries(PERPS_MARKETS_BY_ID[network])) {
-        PERPS_MARKETS_BY_NAME[network][v] = parseInt(k);
-    }
-}
-
-// console.log('COLLATERALS_BY_NAME:', COLLATERALS_BY_NAME);
-// console.log('PERPS_MARKETS_BY_NAME:', PERPS_MARKETS_BY_NAME);
+export const PERPS_MARKETS_BY_NAME = Object.fromEntries(
+    Object.entries(PERPS_MARKETS_BY_ID).map(([network, values]) => ({
+        [network]: Object.fromEntries(Object.entries(values).map(([k, v]) => [v, k]))
+    }))
+);

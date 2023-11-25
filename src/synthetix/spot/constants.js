@@ -22,6 +22,4 @@ for (const network in SPOT_MARKETS_BY_ID) {
     }
 }
 
-// // Usage
-// console.log('SPOT_MARKETS_BY_ID:', SPOT_MARKETS_BY_ID);
-// console.log('SPOT_MARKETS_BY_NAME:', SPOT_MARKETS_BY_NAME);
+export { SPOT_MARKETS_BY_ID, SPOT_MARKETS_BY_NAME };

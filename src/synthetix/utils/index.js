@@ -1,7 +1,7 @@
-const weiUtils = require('./wei');
-const multicallUtils = require('./multicall');
+import weiUtils from './wei.js';
+import multicallUtils from './multicall.js';
 
-module.exports = {
+export default {
   ...weiUtils,
   ...multicallUtils,
 };

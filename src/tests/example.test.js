@@ -1,5 +1,6 @@
-const assert = require('assert');
-const { ethers } = require('ethers');
+// test.js
+import assert from 'assert';
+import { ethers } from 'ethers';
 
 const rpcUrl = 'http://127.0.0.1:8545';
 

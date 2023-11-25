@@ -1,4 +1,4 @@
-const PRICE_FEED_IDS = {
+export const PRICE_FEED_IDS = {
     10: {
         'SNX': '0x39d020f60982ed892abbcd4a06a276a9f9b7bfbce003204c110b6e488f502da3',
         'ETH': '0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace',

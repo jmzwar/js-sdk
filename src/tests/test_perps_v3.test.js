@@ -1,18 +1,17 @@
-const { SynthetixJs } = require('synthetix-js');
-require('dotenv').config();
+import Synthetix from '../synthetix/synthetix.js';
+import assert from 'assert';
+import 'dotenv/config';
 
-// constants
+// Constants
 const TEST_MARKET_ID = 100;
 const TEST_SETTLEMENT_STRATEGY_ID = 1;
+const snx = new Synthetix();
+const logger = console;
 
-// Instantiate Synthetix
-const snx = new SynthetixJs();
-const logger = console; // You can replace this with your preferred logging mechanism
 
-// tests
+// Tests
 async function testPerpsModule() {
   try {
-    // The instance has a perps_module
     const perpsModule = snx.perps;
     assert(perpsModule !== null);
     assert(perpsModule.marketProxy !== null);
@@ -21,7 +20,7 @@ async function testPerpsModule() {
     assert(perpsModule.marketsById !== null);
     assert(perpsModule.marketsByName !== null);
   } catch (error) {
-    logger.error(`Error in test_perps_module: ${error.message}`);
+    logger.error(`Error in test_perps_module: ${error}`);
   }
 }
 
@@ -262,31 +261,29 @@ async function testPerpsMarketSummary() {
     }
   }
 
-  // ... (previous code)
 
-const { raises } = require('assert');
-
-async function testPerpsModifyCollateral() {
-  try {
-    // Users can deposit and withdraw collateral
-    await raises(async () => {
-      // bad market name
-      await snx.perps.modifyCollateral(1, { marketName: 'WRONG' });
-    });
-
-    await raises(async () => {
-      // bad market id
-      await snx.perps.modifyCollateral(1, { marketId: 123 });
-    });
-
-    const depositTx = await snx.perps.modifyCollateral(1, { marketName: 'sUSD' });
-    logger.info(`Address: ${snx.address} - deposit: ${JSON.stringify(depositTx)}`);
-
-    assert(depositTx !== null);
-  } catch (error) {
-    logger.error(`Error in test_perps_modify_collateral: ${error.message}`);
+  import chai from 'chai';
+  import chaiAsPromised from 'chai-as-promised';
+  
+  chai.use(chaiAsPromised);
+  const { expect } = chai;
+  
+  async function testPerpsModifyCollateral() {
+    try {
+      // Users can deposit and withdraw collateral
+      await expect(snx.perps.modifyCollateral(1, { marketName: 'WRONG' })).to.be.rejected;
+  
+      await expect(snx.perps.modifyCollateral(1, { marketId: 123 })).to.be.rejected;
+  
+      const depositTx = await snx.perps.modifyCollateral(1, { marketName: 'sUSD' });
+      logger.info(`Address: ${snx.address} - deposit: ${JSON.stringify(depositTx)}`);
+  
+      assert(depositTx !== null);
+    } catch (error) {
+      logger.error(`Error in testPerpsModifyCollateral: ${error.message}`);
+    }
   }
-}
+  
 
 async function testPerpsCommitOrder() {
   try {
@@ -336,22 +333,22 @@ async function testPerpsSettlePythOrder() {
   
 
 // Run the tests
-// testPerpsModule();
-// testPerpsMarkets();
-// testPerpsAccountFetch();
-// testPerpsAccountCreate();
-// testPerpsAccountMarginInfo();
-// testPerpsOpenPosition();
-// testPerpsOpenPositionsById();
-// testPerpsOpenPositionsByName();
-// testPerpsAccountCollateralBalances();
-// testPerpsCanLiquidate();
-// testPerpsCanLiquidates();
-// testPerpsMarketSummary();
-// testPerpsSettlementStrategy();
-// testPerpsOrder();
-// testPerpsOrderWithSettlementStrategy();
-// testPerpsModifyCollateral();
-// testPerpsCommitOrder();
-// testPerpsLiquidate();
-// testPerpsSettlePythOrder();
+testPerpsModule();
+testPerpsMarkets();
+testPerpsAccountFetch();
+testPerpsAccountCreate();
+testPerpsAccountMarginInfo();
+testPerpsOpenPosition();
+testPerpsOpenPositionsById();
+testPerpsOpenPositionsByName();
+testPerpsAccountCollateralBalances();
+testPerpsCanLiquidate();
+testPerpsCanLiquidates();
+testPerpsMarketSummary();
+testPerpsSettlementStrategy();
+testPerpsOrder();
+testPerpsOrderWithSettlementStrategy();
+testPerpsModifyCollateral();
+testPerpsCommitOrder();
+testPerpsLiquidate();
+testPerpsSettlePythOrder();

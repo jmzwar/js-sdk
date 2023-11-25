@@ -1,4 +1,4 @@
-const { gql } = require('apollo-server');
+import { gql } from 'apollo-server';
 
 const candles = gql`
     query (
@@ -323,4 +323,4 @@ const queries = {
     'funding_rates': fundingRates,
 };
 
-module.exports = queries;
+export default queries;

@@ -52,7 +52,7 @@ export class Synthetix {
       throw new Error('No chainid in body');
     }
 
-    this.networkId = 84531;
+    this.networkId = chainId || 84531;
     this.trackingCode = trackingCode || DEFAULT_TRACKING_CODE;
     this.referrer = referrer || DEFAULT_REFERRER;
     this.maxPriceImpact = maxPriceImpact || DEFAULT_SLIPPAGE;
@@ -74,7 +74,7 @@ export class Synthetix {
 
     if (!signer.network || !signer.network.chainId) {
       console.warn('ChainId not available, setting to default:', 84531);
-      this.networkId = 84531;
+      this.networkId = chainId || 84531;
     } else if (signer.network.chainId !== chainId) {
       throw new Error('The RPC `chainId` must match the stored `networkId`');
     } else {

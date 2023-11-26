@@ -116,8 +116,6 @@ export class Synthetix {
   }
 
   _loadContracts() {
-    const w3 = ethers; // Use ethers here
-
     const markets =
       'PerpsV2MarketData' in this.contracts
         ? (async () => {
@@ -125,7 +123,7 @@ export class Synthetix {
             const dataAddress = dataDefinition['address'];
             const dataAbi = dataDefinition['abi'];
 
-            const marketdataContract = new w3.ethers.Contract(dataAddress, dataAbi);
+            const marketdataContract = new ethers.Contract(dataAddress, dataAbi);
 
             try {
               const allMarketsData = await marketdataContract.methods
@@ -135,7 +133,7 @@ export class Synthetix {
                 market_address: market[0],
                 asset: market[1].toString('utf-8').trim('\x00'),
                 key: market[2],
-                maxLeverage: w3.utils.formatUnits(market[3].toString(), 'ether'),
+                maxLeverage: ethers.utils.formatUnits(market[3].toString(), 'ether'),
                 price: market[4],
                 marketSize: market[5],
                 marketSkew: market[6],
@@ -161,7 +159,7 @@ export class Synthetix {
             const susdLegacyDefinition = this.contracts['sUSD'];
             const susdLegacyAddress = susdLegacyDefinition['address'];
 
-            return new w3.ethers.Contract(susdLegacyAddress, susdLegacyDefinition['abi']);
+            return new ethers.Contract(susdLegacyAddress, susdLegacyDefinition['abi']);
           })()
         : null;
 
@@ -171,7 +169,7 @@ export class Synthetix {
             const susdDefinition = this.contracts['USDProxy'];
             const susdAddress = susdDefinition['address'];
 
-            return new w3.Contract(susdAddress, susdDefinition['abi']);
+            return new ethers.Contract(susdAddress, susdDefinition['abi']);
           })()
         : null;
 
@@ -181,7 +179,7 @@ export class Synthetix {
             const mcDefinition = this.contracts['TrustedMulticallForwarder'];
             const mcAddress = mcDefinition['address'];
 
-            return new w3.Contract(mcAddress, mcDefinition['abi']);
+            return new ethers.Contract(mcAddress, mcDefinition['abi']);
           })()
         : null;
 

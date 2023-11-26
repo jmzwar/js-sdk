@@ -36,8 +36,5 @@
     "logging": "^3.3.0",
     "pandas-js": "^0.2.4",
     "requests": "^0.3.0"
-  },
-  "directories": {
-    "example": "examples"
   }
 }

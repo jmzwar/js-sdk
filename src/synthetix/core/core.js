@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import { etherToWei, weiToEther } from '../utils/wei.js';
 import { callErc7412, multicallErc7412, writeErc7412 } from '../utils/multicall.js';
 
-
 export class Core {
   constructor(snx, pyth, defaultAccountId = null) {
     this.snx = snx;
@@ -26,12 +25,11 @@ export class Core {
           this.logger.warning(`Failed to fetch core accounts: ${error}`);
         }
 
-        this.defaultAccountId = defaultAccountId || (this.accountId.length > 0 ? this.accountId[0] : null);
+        this.defaultAccountId =
+          defaultAccountId || (this.accountId.length > 0 ? this.accountId[0] : null);
       }
     })();
   }
-
-  
 
   // Read methods
 
@@ -48,7 +46,12 @@ export class Core {
     const balance = await this.accountProxy.methods.balanceOf(address).call();
 
     const inputs = Array.from({ length: balance }, (_, i) => [address, i]);
-    const accountIds = await multicallErc7412(this.snx, this.accountProxy, 'tokenOfOwnerByIndex', inputs);
+    const accountIds = await multicallErc7412(
+      this.snx,
+      this.accountProxy,
+      'tokenOfOwnerByIndex',
+      inputs
+    );
 
     this.accountId = accountIds;
     return accountIds;
@@ -84,7 +87,9 @@ export class Core {
     }
 
     const txParams = this.snx._getTxParams();
-    const createAccountTxParams = this.coreProxy.methods.createAccount(...txArgs).encodeABI(txParams);
+    const createAccountTxParams = this.coreProxy.methods
+      .createAccount(...txArgs)
+      .encodeABI(txParams);
 
     if (submit) {
       const txHash = await this.snx.executeTransaction(createAccountTxParams);
@@ -104,7 +109,9 @@ export class Core {
     const amountWei = etherToWei(amount);
 
     const txParams = this.snx._getTxParams();
-    const depositTxParams = this.coreProxy.methods.deposit(accountId, tokenAddress, amountWei).encodeABI(txParams);
+    const depositTxParams = this.coreProxy.methods
+      .deposit(accountId, tokenAddress, amountWei)
+      .encodeABI(txParams);
 
     if (submit) {
       const txHash = await this.snx.executeTransaction(depositTxParams);
@@ -128,12 +135,7 @@ export class Core {
     const amountWei = etherToWei(amount);
 
     const withdrawTxArgs = [accountId, tokenAddress, amountWei];
-    const withdrawTxParams = writeErc7412(
-      this.snx,
-      this.coreProxy,
-      'withdraw',
-      withdrawTxArgs
-    );
+    const withdrawTxParams = writeErc7412(this.snx, this.coreProxy, 'withdraw', withdrawTxArgs);
 
     if (submit) {
       const txHash = await this.snx.executeTransaction(withdrawTxParams);
@@ -153,16 +155,19 @@ export class Core {
     const amountWei = etherToWei(amount);
     const leverageWei = etherToWei(leverage);
 
-    const delegateTxParams = writeErc7412(
-      this.snx,
-      this.coreProxy,
-      'delegateCollateral',
-      [accountId, poolId, tokenAddress, amountWei, leverageWei]
-    );
+    const delegateTxParams = writeErc7412(this.snx, this.coreProxy, 'delegateCollateral', [
+      accountId,
+      poolId,
+      tokenAddress,
+      amountWei,
+      leverageWei,
+    ]);
 
     if (submit) {
       const txHash = await this.snx.executeTransaction(delegateTxParams);
-      this.logger.info(`Delegating ${amount} ${tokenAddress} to pool id ${poolId} for account ${accountId}`);
+      this.logger.info(
+        `Delegating ${amount} ${tokenAddress} to pool id ${poolId} for account ${accountId}`
+      );
       this.logger.info(`delegate tx: ${txHash}`);
       return txHash;
     } else {
@@ -177,16 +182,18 @@ export class Core {
 
     const amountWei = etherToWei(amount);
 
-    const mintUsdTxParams = writeErc7412(
-      this.snx,
-      this.coreProxy,
-      'mintUsd',
-      [accountId, poolId, tokenAddress, amountWei]
-    );
+    const mintUsdTxParams = writeErc7412(this.snx, this.coreProxy, 'mintUsd', [
+      accountId,
+      poolId,
+      tokenAddress,
+      amountWei,
+    ]);
 
     if (submit) {
       const txHash = await this.snx.executeTransaction(mintUsdTxParams);
-      this.logger.info(`Minting ${amount} sUSD with ${tokenAddress} collateral against pool id ${poolId} for account ${accountId}`);
+      this.logger.info(
+        `Minting ${amount} sUSD with ${tokenAddress} collateral against pool id ${poolId} for account ${accountId}`
+      );
       this.logger.info(`mint tx: ${txHash}`);
       return txHash;
     } else {

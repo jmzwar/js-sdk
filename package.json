@@ -5,7 +5,8 @@
   "main": "setup.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier:write": "prettier --write src/*"
   },
   "keywords": [],
   "author": "Dev sam",
@@ -13,11 +14,11 @@
   "devDependencies": {
     "chai": "^4.3.10",
     "dotenv": "^16.3.1",
-    "mocha": "^10.2.0"
+    "mocha": "^10.2.0",
+    "prettier": "^3.1.0"
   },
   "dependencies": {
     "@ethersproject/logger": "^5.7.0",
-    "@synthetixio/js": "^2.41.0",
     "apollo-server": "^3.13.0",
     "assert": "^2.1.0",
     "axios": "^1.6.2",
@@ -34,12 +35,7 @@
     "hex-encode-decode": "^1.0.0",
     "logging": "^3.3.0",
     "pandas-js": "^0.2.4",
-    "requests": "^0.3.0",
-    "synthetix": "^2.96.1",
-    "synthetix-js": "^2.4.1",
-    "web3": "^4.2.2",
-    "web3-core-helpers": "^1.10.3",
-    "web3-eth-abi": "^4.1.4"
+    "requests": "^0.3.0"
   },
   "directories": {
     "example": "examples"

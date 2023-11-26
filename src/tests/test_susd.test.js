@@ -1,7 +1,6 @@
 import Synthetix from '../synthetix/synthetix.js';
 const os = require('os');
 
-
 const snx = new Synthetix();
 
 // tests

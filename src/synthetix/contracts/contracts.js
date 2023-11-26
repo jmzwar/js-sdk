@@ -14,7 +14,7 @@ function loadContracts(networkId) {
   deploymentFiles.forEach((contract) => {
     try {
       const contractData = JSON.parse(readFileSync(join(deploymentDir, contract)));
-      
+
       // Ensure contractData is an object before accessing properties
       if (contractData && typeof contractData === 'object') {
         const contractName = parse(contract).name;

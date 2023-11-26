@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Web3 } from 'web3';
-import  ContractCustomError  from 'web3-core-helpers';
+import ContractCustomError from 'web3-core-helpers';
 import { utils } from 'ethers';
 import abi from 'ethereumjs-abi';
 import hexConverter from 'hex-encode-decode';
@@ -11,7 +11,7 @@ const ORACLE_DATA_REQUIRED = '0xcf2cabdf';
 export function decodeResult(contract, functionName, result) {
   // get the function ABI
   const funcAbi = contract.interface.getFunction(functionName);
-  const outputTypes = funcAbi.outputs.map(arg => arg.type);
+  const outputTypes = funcAbi.outputs.map((arg) => arg.type);
 
   // decode the result
   const decodedResult = utils.defaultAbiCoder.decode(outputTypes, result);
@@ -37,15 +37,12 @@ export function decodeErc7412Error(snx, error) {
 }
 
 export function makeFulfillmentRequest(snx, address, priceUpdateData, args) {
-  const ercContract = new snx.web3.eth.Contract(
-    snx.contracts['ERC7412'].abi,
-    address
-  );
+  const ercContract = new snx.web3.eth.Contract(snx.contracts['ERC7412'].abi, address);
 
-  const encodedArgs = abi.rawEncode(['uint8', 'uint64', 'bytes32[]', 'bytes[]'], [
-    ...args,
-    priceUpdateData,
-  ]);
+  const encodedArgs = abi.rawEncode(
+    ['uint8', 'uint64', 'bytes32[]', 'bytes[]'],
+    [...args, priceUpdateData]
+  );
 
   // assume 1 wei per price update
   const value = priceUpdateData.length * 1;
@@ -64,7 +61,11 @@ export async function writeErc7412(snx, contract, functionName, args, txParams =
     {
       to: contract._address,
       value: 'value' in txParams ? txParams.value : 0,
-      data: '0x' + contract.methods[functionName](...args).encodeABI().slice(2),
+      data:
+        '0x' +
+        contract.methods[functionName](...args)
+          .encodeABI()
+          .slice(2),
     },
   ];
   calls = calls.concat(thisCall);
@@ -128,7 +129,11 @@ export async function callErc7412(snx, contract, functionName, args, calls = [],
       const callResult = await aggregatedTx.call(txParams, block);
 
       // call was successful, decode the result
-      const decodedResult = decodeResult(contract, functionName, callResult[callResult.length - 1].input);
+      const decodedResult = decodeResult(
+        contract,
+        functionName,
+        callResult[callResult.length - 1].input
+      );
       return decodedResult.length > 1 ? decodedResult : decodedResult[0];
     } catch (error) {
       if (error instanceof ContractCustomError && error.data.startsWith(ORACLE_DATA_REQUIRED)) {
@@ -149,7 +154,14 @@ export async function callErc7412(snx, contract, functionName, args, calls = [],
   }
 }
 
-export async function multicallErc7412(snx, contract, functionName, argsList, calls = [], block = 'latest') {
+export async function multicallErc7412(
+  snx,
+  contract,
+  functionName,
+  argsList,
+  calls = [],
+  block = 'latest'
+) {
   // check if args is a list of lists or tuples
   // correct the format if it is not
   const argsListFixed = argsList.map((args) => (Array.isArray(args) ? args : [args]));
@@ -174,7 +186,9 @@ export async function multicallErc7412(snx, contract, functionName, argsList, ca
 
       // call was successful, decode the result
       const callsToDecode = callResult.slice(-numCalls);
-      const decodedResults = callsToDecode.map((result) => decodeResult(contract, functionName, result.input));
+      const decodedResults = callsToDecode.map((result) =>
+        decodeResult(contract, functionName, result.input)
+      );
       const flatDecodedResults = decodedResults.map((decodedResult) =>
         Array.isArray(decodedResult) ? decodedResult : [decodedResult]
       );
@@ -197,4 +211,3 @@ export async function multicallErc7412(snx, contract, functionName, argsList, ca
     }
   }
 }
-

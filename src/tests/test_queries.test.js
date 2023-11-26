@@ -119,190 +119,183 @@ async function testQueriesTradesAccountSpecified() {
 }
 
 const testQueriesTradesAccountInputs = async (snx, logger) => {
-    try {
-        const tradesAccount = await snx.queries.tradesForAccount(TEST_ACCOUNT, {
-            min_timestamp: TEST_MIN_TIMESTAMP,
-            max_timestamp: TEST_MAX_TIMESTAMP
-        });
+  try {
+    const tradesAccount = await snx.queries.tradesForAccount(TEST_ACCOUNT, {
+      min_timestamp: TEST_MIN_TIMESTAMP,
+      max_timestamp: TEST_MAX_TIMESTAMP,
+    });
 
-        logger.info(`Account: ${TEST_ACCOUNT} - Trades: ${tradesAccount.length}`);
-        checkArray(tradesAccount, 'account', TEST_ACCOUNT, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
-    } catch (error) {
-        console.error(error);
-    }
+    logger.info(`Account: ${TEST_ACCOUNT} - Trades: ${tradesAccount.length}`);
+    checkArray(tradesAccount, 'account', TEST_ACCOUNT, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesTransfersAllMarkets = async (snx, logger) => {
-    try {
-        const transfersMarket = await snx.queries.transfersForMarket();
-        logger.info(`Asset: All - Transfers: ${transfersMarket.length}`);
-        checkArray(transfersMarket, 'asset');
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const transfersMarket = await snx.queries.transfersForMarket();
+    logger.info(`Asset: All - Transfers: ${transfersMarket.length}`);
+    checkArray(transfersMarket, 'asset');
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesTransfersMarket = async (snx, logger) => {
-    try {
-        const transfersMarket = await snx.queries.transfersForMarket(TEST_ASSET);
-        logger.info(`Asset: ${TEST_ASSET} - Transfers: ${transfersMarket.length}`);
-        checkArray(transfersMarket, 'asset', TEST_ASSET);
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const transfersMarket = await snx.queries.transfersForMarket(TEST_ASSET);
+    logger.info(`Asset: ${TEST_ASSET} - Transfers: ${transfersMarket.length}`);
+    checkArray(transfersMarket, 'asset', TEST_ASSET);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesTransfersMarketInputs = async (snx, logger) => {
-    try {
-        const transfersMarket = await snx.queries.transfersForMarket(TEST_ASSET, {
-            min_timestamp: TEST_MIN_TIMESTAMP,
-            max_timestamp: TEST_MAX_TIMESTAMP
-        });
+  try {
+    const transfersMarket = await snx.queries.transfersForMarket(TEST_ASSET, {
+      min_timestamp: TEST_MIN_TIMESTAMP,
+      max_timestamp: TEST_MAX_TIMESTAMP,
+    });
 
-        logger.info(`Asset: ${TEST_ASSET} - Transfers: ${transfersMarket.length}`);
-        checkArray(transfersMarket, 'asset', TEST_ASSET, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
-    } catch (error) {
-        console.error(error);
-    }
+    logger.info(`Asset: ${TEST_ASSET} - Transfers: ${transfersMarket.length}`);
+    checkArray(transfersMarket, 'asset', TEST_ASSET, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesTransfersAccountInternal = async (snx, logger) => {
-    try {
-        const transfersAccount = await snx.queries.transfersForAccount();
-        logger.info(`Account: ${snx.address} - Transfers: ${transfersAccount.length}`);
-        checkArray(transfersAccount, 'account', snx.address.toLowerCase());
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const transfersAccount = await snx.queries.transfersForAccount();
+    logger.info(`Account: ${snx.address} - Transfers: ${transfersAccount.length}`);
+    checkArray(transfersAccount, 'account', snx.address.toLowerCase());
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesTransfersAccountSpecified = async (snx, logger) => {
-    try {
-        const transfersAccount = await snx.queries.transfersForAccount(TEST_ACCOUNT);
-        logger.info(`Account: ${TEST_ACCOUNT} - Transfers: ${transfersAccount.length}`);
-        checkArray(transfersAccount, 'account', TEST_ACCOUNT);
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const transfersAccount = await snx.queries.transfersForAccount(TEST_ACCOUNT);
+    logger.info(`Account: ${TEST_ACCOUNT} - Transfers: ${transfersAccount.length}`);
+    checkArray(transfersAccount, 'account', TEST_ACCOUNT);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesTransfersAccountInputs = async (snx, logger) => {
-    try {
-        const transfersAccount = await snx.queries.transfersForAccount(TEST_ACCOUNT, {
-            min_timestamp: TEST_MIN_TIMESTAMP,
-            max_timestamp: TEST_MAX_TIMESTAMP
-        });
+  try {
+    const transfersAccount = await snx.queries.transfersForAccount(TEST_ACCOUNT, {
+      min_timestamp: TEST_MIN_TIMESTAMP,
+      max_timestamp: TEST_MAX_TIMESTAMP,
+    });
 
-        checkArray(transfersAccount, 'account', TEST_ACCOUNT, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
-    } catch (error) {
-        console.error(error);
-    }
+    checkArray(transfersAccount, 'account', TEST_ACCOUNT, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesPositionsAllMarkets = async (snx, logger) => {
-    try {
-        const positionsMarket = await snx.queries.positionsForMarket();
-        logger.info(`Asset: All - Positions: ${positionsMarket.length}`);
-        
-        if (new Set(positionsMarket.map(item => item.is_open)).size === 2) {
-            checkArray(positionsMarket, 'asset');
-        } else {
-            console.error('Not exactly two unique values for "is_open" in positionsMarket.');
-        }
-    } catch (error) {
-        console.error(error);
+  try {
+    const positionsMarket = await snx.queries.positionsForMarket();
+    logger.info(`Asset: All - Positions: ${positionsMarket.length}`);
+
+    if (new Set(positionsMarket.map((item) => item.is_open)).size === 2) {
+      checkArray(positionsMarket, 'asset');
+    } else {
+      console.error('Not exactly two unique values for "is_open" in positionsMarket.');
     }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesPositionsMarket = async (snx, logger) => {
-    try {
-        const positionsMarket = await snx.queries.positionsForMarket(TEST_ASSET);
-        logger.info(`Asset: ${TEST_ASSET} - Positions: ${positionsMarket.length}`);
+  try {
+    const positionsMarket = await snx.queries.positionsForMarket(TEST_ASSET);
+    logger.info(`Asset: ${TEST_ASSET} - Positions: ${positionsMarket.length}`);
 
-        if (new Set(positionsMarket.map(item => item.is_open)).size === 2) {
-            checkArray(positionsMarket, 'asset', TEST_ASSET);
-        } else {
-            console.error('Not exactly two unique values for "is_open" in positionsMarket.');
-        }
-    } catch (error) {
-        console.error(error);
+    if (new Set(positionsMarket.map((item) => item.is_open)).size === 2) {
+      checkArray(positionsMarket, 'asset', TEST_ASSET);
+    } else {
+      console.error('Not exactly two unique values for "is_open" in positionsMarket.');
     }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesPositionsMarketOpen = async (snx, logger) => {
-    try {
-        const positionsMarket = await snx.queries.positionsForMarket(TEST_ASSET, { open_only: true });
-        logger.info(`Asset: ${TEST_ASSET} - Positions: ${positionsMarket.length}`);
+  try {
+    const positionsMarket = await snx.queries.positionsForMarket(TEST_ASSET, { open_only: true });
+    logger.info(`Asset: ${TEST_ASSET} - Positions: ${positionsMarket.length}`);
 
-        if (new Set(positionsMarket.map(item => item.is_open)).size === 1) {
-            checkArray(positionsMarket, 'is_open', true);
-        } else {
-            console.error('Not exactly one unique value for "is_open" in positionsMarket.');
-        }
-    } catch (error) {
-        console.error(error);
+    if (new Set(positionsMarket.map((item) => item.is_open)).size === 1) {
+      checkArray(positionsMarket, 'is_open', true);
+    } else {
+      console.error('Not exactly one unique value for "is_open" in positionsMarket.');
     }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesPositionsAccountInternal = async (snx, logger) => {
-    try {
-        const positionsAccount = await snx.queries.positionsForAccount();
-        logger.info(`Account: ${snx.address} - Positions: ${positionsAccount.length}`);
-        checkArray(positionsAccount, 'account', snx.address.toLowerCase());
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const positionsAccount = await snx.queries.positionsForAccount();
+    logger.info(`Account: ${snx.address} - Positions: ${positionsAccount.length}`);
+    checkArray(positionsAccount, 'account', snx.address.toLowerCase());
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesPositionsAccountSpecified = async (snx, logger) => {
-    try {
-        const positionsAccount = await snx.queries.positionsForAccount(TEST_ACCOUNT);
-        logger.info(`Account: ${TEST_ACCOUNT} - Positions: ${positionsAccount.length}`);
-        checkArray(positionsAccount, 'account', TEST_ACCOUNT);
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const positionsAccount = await snx.queries.positionsForAccount(TEST_ACCOUNT);
+    logger.info(`Account: ${TEST_ACCOUNT} - Positions: ${positionsAccount.length}`);
+    checkArray(positionsAccount, 'account', TEST_ACCOUNT);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesFundingRatesAllMarkets = async (snx, logger) => {
-    try {
-        const fundingRatesMarket = await snx.queries.fundingRates();
-        logger.info(`Asset: All - Funding Rates: ${fundingRatesMarket.length}`);
-        checkArray(fundingRatesMarket, 'asset');
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const fundingRatesMarket = await snx.queries.fundingRates();
+    logger.info(`Asset: All - Funding Rates: ${fundingRatesMarket.length}`);
+    checkArray(fundingRatesMarket, 'asset');
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesFundingRatesMarket = async (snx, logger) => {
-    try {
-        const fundingRatesMarket = await snx.queries.fundingRates(TEST_ASSET);
-        logger.info(`Asset: ${TEST_ASSET} - Funding Rates: ${fundingRatesMarket.length}`);
-        checkArray(fundingRatesMarket, 'asset', TEST_ASSET);
-    } catch (error) {
-        console.error(error);
-    }
+  try {
+    const fundingRatesMarket = await snx.queries.fundingRates(TEST_ASSET);
+    logger.info(`Asset: ${TEST_ASSET} - Funding Rates: ${fundingRatesMarket.length}`);
+    checkArray(fundingRatesMarket, 'asset', TEST_ASSET);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const testQueriesFundingRatesInputs = async (snx, logger) => {
-    try {
-        const fundingRatesMarket = await snx.queries.fundingRates(TEST_ASSET, {
-            min_timestamp: TEST_MIN_TIMESTAMP,
-            max_timestamp: TEST_MAX_TIMESTAMP
-        });
+  try {
+    const fundingRatesMarket = await snx.queries.fundingRates(TEST_ASSET, {
+      min_timestamp: TEST_MIN_TIMESTAMP,
+      max_timestamp: TEST_MAX_TIMESTAMP,
+    });
 
-        checkArray(fundingRatesMarket, 'asset', TEST_ASSET, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
-    } catch (error) {
-        console.error(error);
-    }
+    checkArray(fundingRatesMarket, 'asset', TEST_ASSET, TEST_MIN_TIMESTAMP, TEST_MAX_TIMESTAMP);
+  } catch (error) {
+    console.error(error);
+  }
 };
-
-
-
-
-
-
-
 
 // Run the tests
 testQueriesCandlesMarket();

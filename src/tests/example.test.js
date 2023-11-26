@@ -12,7 +12,7 @@ describe('Example', () => {
     assert.strictEqual(isConnected.chainId !== null, true, 'Expected to be connected to RPC');
 
     const blockNumber = await provider.getBlockNumber();
-    console.log('Block Number:', blockNumber); 
+    console.log('Block Number:', blockNumber);
     assert.ok(blockNumber >= 0, 'Expected a valid block number');
   });
 });

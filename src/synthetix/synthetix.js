@@ -1,5 +1,13 @@
 import { ethers, providers, Wallet } from 'ethers';
-import { DEFAULT_NETWORK_ID, DEFAULT_TRACKING_CODE, DEFAULT_SLIPPAGE, DEFAULT_GQL_ENDPOINT_PERPS, DEFAULT_GQL_ENDPOINT_RATES, DEFAULT_PRICE_SERVICE_ENDPOINTS, DEFAULT_REFERRER } from './constants.js';
+import {
+  DEFAULT_NETWORK_ID,
+  DEFAULT_TRACKING_CODE,
+  DEFAULT_SLIPPAGE,
+  DEFAULT_GQL_ENDPOINT_PERPS,
+  DEFAULT_GQL_ENDPOINT_RATES,
+  DEFAULT_PRICE_SERVICE_ENDPOINTS,
+  DEFAULT_REFERRER,
+} from './constants.js';
 import { weiToEther, etherToWei } from './utils/wei.js';
 import { loadContracts } from './contracts/contracts.js';
 import Pyth from './pyth/pyth.js';
@@ -8,7 +16,7 @@ import Perps from './perps/perps.js';
 import Spot from './spot/spot.js';
 import Queries from './queries/queries.js';
 
-class Synthetix {
+export class Synthetix {
   constructor({
     providerRpc,
     address = ethers.constants.AddressZero,
@@ -25,7 +33,7 @@ class Synthetix {
     satsumaApiKey = null,
     priceServiceEndpoint = null,
     telegramToken = null,
-    telegramChannelName = null
+    telegramChannelName = null,
   }) {
     this.logger = new ethers.utils.Logger(this.constructor.name);
     this.logger.level = ethers.utils.Logger.levels.INFO;
@@ -71,9 +79,9 @@ class Synthetix {
       throw new Error('The RPC `chainId` must match the stored `networkId`');
     } else {
       this.networkId = chainId;
-      this.nonce =  signer.getTransactionCount();
+      this.nonce = signer.getTransactionCount();
     }
-    
+
     this.signer = signer;
     this.networkId = networkId;
 
@@ -92,7 +100,7 @@ class Synthetix {
       synthetix: this,
       gqlEndpointPerps,
       gqlEndpointRates,
-      apiKey: satsumaApiKey
+      apiKey: satsumaApiKey,
     });
 
     if (!priceServiceEndpoint && this.networkId in DEFAULT_PRICE_SERVICE_ENDPOINTS) {
@@ -110,72 +118,78 @@ class Synthetix {
   _loadContracts() {
     const w3 = ethers; // Use ethers here
 
-    const markets = 'PerpsV2MarketData' in this.contracts ?
-      (async () => {
-        const dataDefinition = this.contracts['PerpsV2MarketData'];
-        const dataAddress = dataDefinition['address'];
-        const dataAbi = dataDefinition['abi'];
+    const markets =
+      'PerpsV2MarketData' in this.contracts
+        ? (async () => {
+            const dataDefinition = this.contracts['PerpsV2MarketData'];
+            const dataAddress = dataDefinition['address'];
+            const dataAbi = dataDefinition['abi'];
 
-        const marketdataContract = new w3.ethers.Contract(dataAddress, dataAbi);
+            const marketdataContract = new w3.ethers.Contract(dataAddress, dataAbi);
 
-        try {
-          const allMarketsData = await marketdataContract.methods.allProxiedMarketSummaries().call();
-          return allMarketsData.map(market => ({
-            market_address: market[0],
-            asset: market[1].toString('utf-8').trim("\x00"),
-            key: market[2],
-            maxLeverage: w3.utils.formatUnits(market[3].toString(), 'ether'),
-            price: market[4],
-            marketSize: market[5],
-            marketSkew: market[6],
-            marketDebt: market[7],
-            currentFundingRate: market[8],
-            currentFundingVelocity: market[9],
-            takerFee: market[DEFAULT_NETWORK_ID][0],
-            makerFee: market[DEFAULT_NETWORK_ID][1],
-            takerFeeDelayedOrder: market[DEFAULT_NETWORK_ID][2],
-            makerFeeDelayedOrder: market[DEFAULT_NETWORK_ID][3],
-            takerFeeOffchainDelayedOrder: market[DEFAULT_NETWORK_ID][4],
-            makerFeeOffchainDelayedOrder: market[DEFAULT_NETWORK_ID][5]
-          }));
-        } catch (e) {
-          return [];
-        }
-      })() :
-      [];
+            try {
+              const allMarketsData = await marketdataContract.methods
+                .allProxiedMarketSummaries()
+                .call();
+              return allMarketsData.map((market) => ({
+                market_address: market[0],
+                asset: market[1].toString('utf-8').trim('\x00'),
+                key: market[2],
+                maxLeverage: w3.utils.formatUnits(market[3].toString(), 'ether'),
+                price: market[4],
+                marketSize: market[5],
+                marketSkew: market[6],
+                marketDebt: market[7],
+                currentFundingRate: market[8],
+                currentFundingVelocity: market[9],
+                takerFee: market[DEFAULT_NETWORK_ID][0],
+                makerFee: market[DEFAULT_NETWORK_ID][1],
+                takerFeeDelayedOrder: market[DEFAULT_NETWORK_ID][2],
+                makerFeeDelayedOrder: market[DEFAULT_NETWORK_ID][3],
+                takerFeeOffchainDelayedOrder: market[DEFAULT_NETWORK_ID][4],
+                makerFeeOffchainDelayedOrder: market[DEFAULT_NETWORK_ID][5],
+              }));
+            } catch (e) {
+              return [];
+            }
+          })()
+        : [];
 
-    const susdLegacyToken = 'sUSD' in this.contracts ?
-      (() => {
-        const susdLegacyDefinition = this.contracts['sUSD'];
-        const susdLegacyAddress = susdLegacyDefinition['address'];
+    const susdLegacyToken =
+      'sUSD' in this.contracts
+        ? (() => {
+            const susdLegacyDefinition = this.contracts['sUSD'];
+            const susdLegacyAddress = susdLegacyDefinition['address'];
 
-        return new w3.ethers.Contract(susdLegacyAddress, susdLegacyDefinition['abi']);
-      })() :
-      null;
+            return new w3.ethers.Contract(susdLegacyAddress, susdLegacyDefinition['abi']);
+          })()
+        : null;
 
-    const susdToken = 'USDProxy' in this.contracts ?
-      (() => {
-        const susdDefinition = this.contracts['USDProxy'];
-        const susdAddress = susdDefinition['address'];
+    const susdToken =
+      'USDProxy' in this.contracts
+        ? (() => {
+            const susdDefinition = this.contracts['USDProxy'];
+            const susdAddress = susdDefinition['address'];
 
-        return new w3.Contract(susdAddress, susdDefinition['abi']);
-      })() :
-      null;
+            return new w3.Contract(susdAddress, susdDefinition['abi']);
+          })()
+        : null;
 
-    const multicall = 'TrustedMulticallForwarder' in this.contracts ?
-      (() => {
-        const mcDefinition = this.contracts['TrustedMulticallForwarder'];
-        const mcAddress = mcDefinition['address'];
+    const multicall =
+      'TrustedMulticallForwarder' in this.contracts
+        ? (() => {
+            const mcDefinition = this.contracts['TrustedMulticallForwarder'];
+            const mcAddress = mcDefinition['address'];
 
-        return new w3.Contract(mcAddress, mcDefinition['abi']);
-      })() :
-      null;
+            return new w3.Contract(mcAddress, mcDefinition['abi']);
+          })()
+        : null;
 
     return {
       markets,
       susdLegacyToken,
       susdToken,
-      multicall
+      multicall,
     };
   }
 
@@ -184,7 +198,7 @@ class Synthetix {
       from: this.address,
       chainId: this.networkId,
       value: value,
-      nonce: this.nonce
+      nonce: this.nonce,
     };
 
     if (to !== null) {
@@ -195,19 +209,21 @@ class Synthetix {
   }
 
   async wait(txHash, timeout = 120) {
-    const receipt = await this.providerRpc.waitForTransaction(txHash, { timeout });
+    const receipt = await this.providerRpc.waitForTransaction(txHash, {
+      timeout,
+    });
     return receipt;
   }
 
   async executeTransaction(txData) {
     if (this.privateKey === null) {
-      throw new Error("No private key specified.");
+      throw new Error('No private key specified.');
     }
 
-    if (!("gas" in txData)) {
-      txData.gas = this.useEstimateGas ?
-        parseInt(await this.signer.estimateGas(txData) * 1.2) :
-        1500000;
+    if (!('gas' in txData)) {
+      txData.gas = this.useEstimateGas
+        ? parseInt((await this.signer.estimateGas(txData)) * 1.2)
+        : 1500000;
     }
 
     const signedTxn = await this.signer.signTransaction(txData);
@@ -235,7 +251,10 @@ class Synthetix {
     }
 
     const wethContract = new ethers.Contract(
-      this.contracts.WETH.address, this.contracts.WETH.abi, this.signer);
+      this.contracts.WETH.address,
+      this.contracts.WETH.abi,
+      this.signer
+    );
 
     const ethBalance = await this.signer.getBalance(address);
     const wethBalance = await wethContract.methods.balanceOf(address).call();
@@ -244,15 +263,27 @@ class Synthetix {
   }
 
   approve(tokenAddress, targetAddress, amount = null, submit = false) {
-    amount = amount === null ? '115792089237316195423570985008687907853269984665640564039457584007913129639935' : etherToWei(amount);
-    const tokenContract = new ethers.Contract(tokenAddress, this.contracts.USDProxy.abi, this.signer);
+    amount =
+      amount === null
+        ? '115792089237316195423570985008687907853269984665640564039457584007913129639935'
+        : etherToWei(amount);
+    const tokenContract = new ethers.Contract(
+      tokenAddress,
+      this.contracts.USDProxy.abi,
+      this.signer
+    );
 
     let txParams = this._getTxParams();
-    txParams = { ...txParams, data: tokenContract.methods.approve(targetAddress, amount).encodeABI() };
+    txParams = {
+      ...txParams,
+      data: tokenContract.methods.approve(targetAddress, amount).encodeABI(),
+    };
 
     if (submit) {
-      const txHash =  this.executeTransaction(txParams);
-      this.logger.info(`Approving ${targetAddress} to spend ${amount / 1e18} ${tokenAddress} for ${this.address}`);
+      const txHash = this.executeTransaction(txParams);
+      this.logger.info(
+        `Approving ${targetAddress} to spend ${amount / 1e18} ${tokenAddress} for ${this.address}`
+      );
       this.logger.info(`approve tx: ${txHash}`);
       return txHash;
     } else {
@@ -262,7 +293,11 @@ class Synthetix {
 
   async wrapEth(amount, submit = false) {
     const valueWei = etherToWei(Math.max(amount, 0));
-    const wethContract = new ethers.Contract(this.contracts.WETH.address, this.contracts.WETH.abi, this.signer);
+    const wethContract = new ethers.Contract(
+      this.contracts.WETH.address,
+      this.contracts.WETH.abi,
+      this.signer
+    );
 
     let fnName, txArgs;
     if (amount < 0) {

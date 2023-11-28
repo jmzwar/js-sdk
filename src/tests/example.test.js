@@ -1,5 +1,6 @@
-const assert = require('assert');
-const { ethers } = require('ethers');
+// test.js
+import assert from 'assert';
+import { ethers } from 'ethers';
 
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -11,7 +12,7 @@ describe('Example', () => {
     assert.strictEqual(isConnected.chainId !== null, true, 'Expected to be connected to RPC');
 
     const blockNumber = await provider.getBlockNumber();
-    console.log('Block Number:', blockNumber); 
+    console.log('Block Number:', blockNumber);
     assert.ok(blockNumber >= 0, 'Expected a valid block number');
   });
 });

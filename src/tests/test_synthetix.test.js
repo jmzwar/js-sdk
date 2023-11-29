@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { ethers } from 'ethers';
 import Synthetix from '../synthetix/synthetix.js';
 
-describe('Synthetix', () => {
+describe('Synthetix', function () { // Changed to a regular function
   let snx;
 
   before(async () => {
@@ -25,7 +25,8 @@ describe('Synthetix', () => {
     assert.isAbove(Object.keys(snx.v2Markets).length, 0);
   });
 
-  it('should have a functioning ethers provider', async () => {
+  it('should have a functioning ethers provider', async function () { // Changed to a regular function
+    this.timeout(5000); 
     try {
       console.log('snx:', snx);
 

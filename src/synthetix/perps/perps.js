@@ -1,4 +1,3 @@
-import hexConverter from 'hex-encode-decode';
 import { ethers } from 'ethers';
 import { etherToWei, weiToEther } from '../utils/wei.js';
 import {
@@ -99,7 +98,7 @@ class Perps {
     const feedIds = marketNames.map((marketName) => this.snx.pyth.priceFeedIds[marketName]);
     const priceUpdateData = this.snx.pyth.getFeedsData(feedIds);
 
-    const rawFeedIds = feedIds.map((feedId) => hexConverter.decode(feedId));
+    const rawFeedIds = feedIds.map((feedId) => parseInt(Number(feedId)));
     const args = [1, 30, rawFeedIds];
 
     const [to, , data] = makeFulfillmentRequest(

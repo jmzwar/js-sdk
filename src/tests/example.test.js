@@ -1,5 +1,5 @@
 // test.js
-import assert from 'assert';
+import { assert } from 'chai';
 import { ethers } from 'ethers';
 
 const rpcUrl = 'http://127.0.0.1:8545';

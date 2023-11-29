@@ -5,11 +5,10 @@
   "main": "setup.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha src/**/test_susd.test.js",
     "prettier:write": "prettier --write src/*"
   },
   "keywords": [],
-  "author": "Dev sam",
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.3.10",
@@ -27,6 +26,7 @@
     "chai-as-promised": "^7.1.1",
     "decimal.js": "^10.4.3",
     "ethers": "^5.7.2",
+    "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
     "logging": "^3.3.0"
   }

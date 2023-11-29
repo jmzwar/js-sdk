@@ -12,7 +12,6 @@ import { default as chaiAsPromised } from 'chai-as-promised';
 
 chai.use(chaiAsPromised);
 
-const { expect } = chai;
 const { providers } = ethers;
 
 const snx = async () => {

@@ -1,9 +1,4 @@
-import axios from 'axios';
-import { Web3 } from 'web3';
-import ContractCustomError from 'web3-core-helpers';
 import { utils } from 'ethers';
-import abi from 'ethereumjs-abi';
-import hexConverter from 'hex-encode-decode';
 
 // constants
 const ORACLE_DATA_REQUIRED = '0xcf2cabdf';
@@ -22,7 +17,7 @@ export function decodeResult(contract, functionName, result) {
 // ERC-7412 support
 export function decodeErc7412Error(snx, error) {
   // remove the signature and decode the error data
-  const errorData = hexConverter.decode(`0x${error.slice(10)}`);
+  const errorData = parseInt(Number(`0x${error.slice(10)}`));
 
   // decode the result
   const outputTypes = ['address', 'bytes'];

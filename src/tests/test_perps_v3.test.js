@@ -1,5 +1,5 @@
 import Synthetix from '../synthetix/synthetix.js';
-import assert from 'assert';
+import { assert } from 'chai';
 import 'dotenv/config';
 
 // Constants

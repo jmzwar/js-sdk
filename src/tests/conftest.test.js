@@ -4,7 +4,7 @@ import { Synthetix } from '../synthetix';
 
 dotenvConfig();
 
-const RPC = process.env.BASE_TESTNET_RPC;
+const RPC = process.env.PROVIDER_RPC;
 const ADDRESS = process.env.ADDRESS;
 
 import { default as chai } from 'chai';
@@ -26,9 +26,4 @@ const snx = async () => {
   return synthetix;
 };
 
-const logger = () => {
-  const logg = console;
-  return logg;
-};
-
-export { snx, logger };
+export { snx };

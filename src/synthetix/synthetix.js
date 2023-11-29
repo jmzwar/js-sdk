@@ -232,7 +232,7 @@ export class Synthetix {
     return ethers.utils.hexlify(txToken);
   }
 
-  async getSusdBalance(address = null, legacy = false) {
+  async getSusdBalance(address, legacy = false) {
     if (!address) {
       address = this.address;
     }

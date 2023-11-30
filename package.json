@@ -5,7 +5,7 @@
   "main": "setup.js",
   "type": "module",
   "scripts": {
-    "test": "mocha --exit --recursive --timeout 5000 src/**/test_synthetix.test.js",
+    "test": "mocha --exit --recursive --timeout 5000 src/**/test_susd.test.js",
     "prettier:write": "prettier --write src/*"
   },
   "keywords": [],

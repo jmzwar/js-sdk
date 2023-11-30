@@ -30,4 +30,4 @@ function loadContracts(networkId) {
   return contracts;
 }
 
-export { loadContracts };
+export default loadContracts ;

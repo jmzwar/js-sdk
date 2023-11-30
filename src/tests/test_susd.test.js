@@ -7,14 +7,18 @@ config();
 let snx;
 const address = process.env.ADDRESS;
 
+
 before(async () => {
+  console.log("Initializing Synthetix...");
   snx = new Synthetix({
     providerRpc: process.env.PROVIDER_RPC,
     address,
     privateKey: process.env.PRIVATE_KEY,
     networkId: process.env.NETWORK_ID,
   });
+  console.log("Synthetix initialized successfully!");
 });
+
 
 describe('sUSD Tests', () => {
   it('should have a valid sUSD contract', async () => {
@@ -26,7 +30,7 @@ describe('sUSD Tests', () => {
   });
 
   it('should have a valid sUSD balance', async () => {
-    const balance = await snx.getSusdBalance(address);
+    const balance = await snx.getSUSDBalance(address);
 
     console.info(`Balance: ${JSON.stringify(balance)}`);
     assert(balance !== null);
@@ -34,9 +38,9 @@ describe('sUSD Tests', () => {
   });
 
   it('should have a valid legacy sUSD balance', async () => {
-    const balance = await snx.getSusdBalance({ legacy: true });
+    const balance = await snx.getSUSDBalance(address, true);
     console.info(`Balance: ${JSON.stringify(balance)}`);
     assert(balance !== null);
     assert(balance.balance >= 0);
-  });
+  });  
 });

@@ -2,34 +2,34 @@ import { assert } from 'chai';
 import { ethers } from 'ethers';
 import Synthetix from '../synthetix/synthetix.js';
 
-describe('Synthetix', function () { // Changed to a regular function
+describe('Synthetix Initialization', function () {
   let snx;
 
   before(async () => {
+    // Initialize Synthetix instance
     snx = new Synthetix({
       providerRpc: 'https://base-goerli.infura.io/v3/f997a699e47c4d7495dbd0cc4e1f5aa1',
       address: '0xa0Ee7A142d267C1f36714E4a8F75612F20a79720',
       privateKey: '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6',
-      networkId: 84531,
+      networkId: 10,
     });
 
     console.info('Synthetix instance created:', snx);
   });
 
-  it('should initialize Synthetix', () => {
+  it('should initialize Synthetix instance', () => {
     assert.isNotNull(snx);
   });
 
   it('should have v2 markets', () => {
-    console.info(`${Object.keys(snx.v2Markets).length} Markets: ${Object.keys(snx.v2Markets)}`);
+    console.info(`Markets: ${Object.keys(snx.v2Markets)}`);
     assert.isAbove(Object.keys(snx.v2Markets).length, 0);
   });
 
-  it('should have a functioning ethers provider', async function () { // Changed to a regular function
-    this.timeout(5000); 
-    try {
-      console.log('snx:', snx);
+  it('should have a functioning ethers provider', async function () {
+    this.timeout(5000);
 
+    try {
       // Use the provider directly to get the block
       const provider = new ethers.providers.JsonRpcProvider(snx.providerRpc);
       const block = await provider.getBlock('latest');
